@@ -1,0 +1,106 @@
+syntax = "proto3";
+package rrocker.api;
+
+//Not the greatest design in the world since it doesn't encode
+//exactly which errors can be returned from which function
+//but I'm cutting this corner for simplicity's sake
+enum APIError {
+    ERR_INTERNAL_ERROR = 0; //reserved for truly exceptional situations
+    ERR_TASK_NOT_FOUND = 1;
+    ERR_TASK_STOPPED = 2;
+    ERR_TASK_FINISHED = 3;
+    ERR_BIN_NOT_FOUND = 4;
+}
+
+/// A handle for our task, contains an UUIDv4
+message TaskHandle {
+    string uuid = 1;
+}
+
+/// Memory and CPU constraints for a task. Best effort constraints so 
+/// values above what the host can offer will mean *no* constraints
+message ResourceConstraints {
+    int32 max_cpu = 1; //CPU % of all cores on daemon host
+    int32 max_mem_bytes = 2;  //memory in bytes
+}
+
+/// A message encoding the start task request.
+/// `cmd` is required while `args` and `constraints` are optional
+message StartTaskRequest {
+    string cmd = 1;
+    repeated string args = 2;
+    ResourceConstraints constraints = 3;
+}
+
+/// Task start result, either returns a task handle or error
+message StartTaskReply {
+    oneof result {
+        TaskHandle handle = 1;
+        APIError error = 2;
+    }
+}
+
+/// Task stop result, either a dummy value to indicate it was killed
+/// successfully or an error indicating what when wrong
+message StopTaskReply
+{
+    oneof result {
+        bool ok = 1; //dummy
+        APIError error = 2;
+    }
+}
+
+/// Designates which pipe the program output came from
+enum OutputStream {
+    Stdin = 0; //never used but let's be consistent with the linux api
+    Stdout = 1;
+    Stderr = 2;
+}
+
+/// Task output with a line of output plus which pipe it came from
+message TaskOutput {
+    string line = 1;
+    OutputStream stream = 2;
+}
+
+/// Enum describing the status of a task
+enum TaskStatus {
+    TASK_COMPLETED = 0;
+    TASK_RUNNING = 1;
+    TASK_KILLED = 2;    
+}
+
+/// The task's state is encoded as a status and an exit code if set by the task
+message TaskState {
+    TaskStatus status = 1;
+    int32 code = 2;
+}
+
+/// Reply message of the task query command, either has the state or an error
+message QueryTaskReply {
+    oneof result {
+        TaskState state = 1;
+        APIError error = 2;
+    }
+}
+
+/// The message streamed when requesting a task's output.
+/// Each message will either be some output or a state indicating termination.
+/// In the case of an invalid task handle the stream will return a single message with the error
+// Note: in rust I would've encoded this as Result<Stream<Output>, Error> but unfortunately that
+// doesn't seem possible in gRPC so it has to be encoded as Stream<Result<Output, Error>>
+message TaskOutputReply {
+    oneof result {
+        TaskOutput output = 1;
+        TaskState state = 2;
+        APIError error = 3;
+    }
+}
+
+/// Scheduler service used to run isolated and constrained tasks on a daemon
+service Scheduler {
+    rpc StartTask (StartTaskRequest) returns (StartTaskReply);
+    rpc StopTask (TaskHandle) returns (StopTaskReply);
+    rpc QueryTask (TaskHandle) returns (QueryTaskReply);
+    rpc TaskOutputStream (TaskHandle) returns (stream TaskOutputReply);
+}
