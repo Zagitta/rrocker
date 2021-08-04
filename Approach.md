@@ -6,12 +6,12 @@ I'll be aiming to implement the 5th level of the challenge.
 
 From a high level perspective I'll be implementing the following components:
 
-- A service/daemon that implements an async gRPC server with authentication and authorization. From here on reffered to as "rrockerd"
-- A worker library that can start/stop/qeuery/stream fully isolated tasks with resource control. This will be a module of rrockerd as it's specialized enough that it's unlikely to be useful as a standalone library.
-- A simple CLI with commands to start/stop/query/stream tasks using the rrocker daemon. From here on reffered to as "rrocker-cli"
-- A shared gRPC api that will be a standalone library that's easy to consume from both rrockerd and rrocker-cli. From here on referred to as "rrocker-lib"
+- A service/daemon that implements an async gRPC server with authentication and authorization. From here on reffered to as `rrockerd`
+- A worker library that can start/stop/query/stream fully isolated tasks with resource control. This will be a module of `rrockerd` as it's specialized enough that it's unlikely to be useful as a standalone library.
+- A simple CLI with commands to start/stop/query/stream tasks using the rrocker daemon. From here on reffered to as `rrocker-cli`
+- A shared gRPC api that will be a standalone library that's easy to consume from both rrockerd and rrocker-cli. From here on referred to as `rrocker-lib`
 
-Breaking each component further down here's a not necessarily exhaustive list of corners I'll cut:
+Here's a breakdown of the engineering tradeoffs for each component:
 
 ## rrockerd:
 I'll be using the rust crate [nix](https://github.com/nix-rust/nix) extensively for the low level systemcalls. Since nix is merely a safe wrapper around libc I believe this is in the spirit of the challenge.
@@ -37,7 +37,7 @@ For the gRPC implementation I'll be using the rust crate [tonic](https://github.
 ## rrocker-cli:
 The CLI will need to be run once per command, so scheduling multiple tasks requires multiple invocations.
 
-There'll be zero command line switches and as such it'll be hardcoded to connect to rrockerd running on localhost.
+There'll be zero command line switches and as such it'll be hardcoded to connect to `rrockerd` running on localhost.
 
 ## rrocker-lib:
 No attention will be paid to backwards compatability of the API, meaning no versioning or abstractions.
@@ -45,7 +45,7 @@ No attention will be paid to backwards compatability of the API, meaning no vers
 Human friendliness of the API is a distant afterthought, as such full UUIDs will be required to interact with tasks.
 
 # Security
-I'll briefly discuss my authentication and authorization scheme below.
+Security is naturally an important aspect of the implementation however as my experience with crypto is limited I'll attempt to follow best pracitices and use the default config of OpenSSL and rustTLS wherever applicable.
 
 ## Authentication
 Authentication will be done with mTLS as per the challenge rules.
