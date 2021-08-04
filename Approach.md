@@ -113,7 +113,7 @@ The following certificates will be created:
 - Server_1 cert used by the server to auth with the clients
 - Client_1 and Client_2 certs used to demo user's only being able to see their own tasks
 - Admin_1 cert used to demo admin's being able to see all tasks
-- An untrusted CA + client cert to demo unauthorized client's can't connect
+- A selfsigned client cert to demo that unauthorized client's can't connect
 
 Private keys will be generated with OpenSSL using the prime256v1 ECDH curve as recommended by mozilla: https://wiki.mozilla.org/Security/Server_Side_TLS#Modern_compatibility.
 
