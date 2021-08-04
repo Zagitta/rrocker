@@ -134,19 +134,19 @@ I'll also write unit tests for the work scheduler to ensure tasks are properly i
 
 # Timeline
 
-- PR #0 (~2½ hours):
+- PR #1 (~2½ hours):
     1. This design document
-- PR #1 (~6 hours):
-    1. Setup project structure, build system and expected dependencies
     1. Create the initial .proto API 
+- PR #2 (~4 hours):
+    1. Setup project structure, build system and expected dependencies
     1. Write script to generate dev certificates
     1. Create gRPC scaffolding + authentication for the client library and server
     1. Implement authentication tests for gRPC server
-- PR #2 (~10 hours):
+- PR #3 (~10 hours):
     1. Implement/fix feedback given on PR #1
     1. Implement work scheduler and tests
     1. Finish gRPC server implementation using the work scheduler
-- PR #3 (~6 hours)
+- PR #4 (~6 hours)
     1. Implement/fix feedback given on PR #2
     1. Fully implement CLI parser
     1. Fix bugs
