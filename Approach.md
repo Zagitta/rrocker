@@ -6,10 +6,10 @@ I'll be aiming to implement the 5th level of the challenge.
 
 From a high level perspective I'll be implementing the following components:
 
-- A service/daemon that implements an async gRPC server with authentication and authorization. From here on reffered to as `rrockerd`
+- A service/daemon that implements an async gRPC server with authentication and authorization. From here on referred to as `rrockerd`
 - A worker library that can start/stop/query/stream fully isolated tasks with resource control. This will be a module of `rrockerd` as it's specialized enough that it's unlikely to be useful as a standalone library.
-- A simple CLI with commands to start/stop/query/stream tasks using the rrocker daemon. From here on reffered to as `rrocker-cli`
-- A shared gRPC api that will be a standalone library that's easy to consume from both rrockerd and rrocker-cli. From here on referred to as `rrocker-lib`
+- A simple CLI with commands to start/stop/query/stream tasks using `rrockerd`. From here on reffered to as `rrocker-cli`
+- A shared gRPC api that will be a standalone library that's easy to consume from both `rrockerd` and `rrocker-cli`. From here on referred to as `rrocker-lib`
 
 Here's a breakdown of the engineering tradeoffs for each component:
 
@@ -23,12 +23,14 @@ The gRPC API is assumed to be internal only, as such there won't be any rate lim
 Dealing with tty, ptty, terminals and what not is entirely out of scope and as such any program output will be streamed as the raw bytes written to the stdout and stderr pipes.
 Furthermore the output will be chunked on newlines and any lines longer than max gRPC packet size will be truncated.
 
-Isolation will be hardcoded to fully isolate each scheduled task from other tasks and the host system. That means a seperate PID, Mount, User and Network namespace for each task with no way to connect them.
-There'll be no network devices attached to any tasks.
+Resource limits will be implemented using separate cgroups for each
+
+Isolation will be hardcoded to fully isolate each scheduled task from other tasks and the host system. That means a separate PID, Mount, User and Network namespace for each task with no way to connect them.
+There will be no network devices attached to any tasks.
 
 Mounting is also considered out of scope and as such each task will be chrooted to a RW root that's a copy of a base image that's removed upon exit of the task.
 
-I'll make no attempt at Linux backwards compatability and the minimum kernel version will be 5.0+.
+I'll make no attempt at Linux backwards compatibility and the minimum kernel version will be 5.0+.
 
 Tasks will inherit the UID/GID of the daemon and internally be mapped as root.
 
@@ -40,22 +42,23 @@ The CLI will need to be run once per command, so scheduling multiple tasks requi
 There'll be zero command line switches and as such it'll be hardcoded to connect to `rrockerd` running on localhost.
 
 ## rrocker-lib:
-No attention will be paid to backwards compatability of the API, meaning no versioning or abstractions.
+No attention will be paid to backwards compatibility of the API, meaning no versioning or abstractions.
 
 Human friendliness of the API is a distant afterthought, as such full UUIDs will be required to interact with tasks.
 
+Resource limits will be exposed 1-to-1 with the underlying cgroups API leaving it up to the `rrocker-cli` to expose it in a human friendly way.
 # Security
-Security is naturally an important aspect of the implementation however as my experience with crypto is limited I'll attempt to follow best pracitices and use the default config of OpenSSL and rustTLS wherever applicable.
+Security is naturally an important aspect of the implementation however as my experience with crypto is limited I'll attempt to follow best practices and use the default configuration of OpenSSL and rustTLS wherever applicable.
 
 ## Authentication
-Authentication will be done with mTLS as per the challenge rules.
+Authentication will be done with mTLS according to the challenge rules.
 
-As per best practice I'll be generating the following certs:
-- Root Certificate Authority (CA). This is our root of trust and should be stored on an airgapped system that's only used to sign/revoke the server/client CAs.
-- Seperate server and client CAs. These are used to sign/revoke server and client certs. Furthermore they're seperated such that an infrastructure team is able to own their CA and deploy new servers independently. These CAs also introduce an indirection such that servers and clients don't need to know about all clients and servers but can simply verify an identity has been signed by the server/client CA.
-- Server_1 Certificate. Cert used by the server to auth with the clients
+The following certificates will be created:
+- Root Certificate Authority (CA). This is our root of trust and should be stored on an air-gapped system that's only used to sign/revoke the server/client CAs.
+- Separate server and client CAs. These are used to sign/revoke server and client certs. Furthermore they're separated such that an infrastructure team is able to own their CA and deploy new servers independently. These CAs also introduce an indirection such that servers and clients don't need to know about all clients and servers but can simply verify an identity has been signed by the server/client CA.
+- Server_1 cert used by the server to auth with the clients
 - Client_1 and Client_2 certs used to demo user's only being able to see their own tasks
-- Admin_1 Certificate cert used to demo admin's being able to see all tasks
+- Admin_1 cert used to demo admin's being able to see all tasks
 - An untrusted CA + client cert to demo unauthorized client's can't connect
 
 Private keys will be generated with OpenSSL using the prime256v1 ECDH curve.
@@ -69,7 +72,6 @@ The public key of a cert will be used as the client id despite the drawback that
 In a production environment you'd introduce another indirection such a user could have multiple certs all manage the same tasks and possibly some way to further segment these tasks into groups.
 
 # Timeline
-Here I'll breifly discuss time estimates and what stages I expect to break the challenge into:
 
 - PR #0 (~2½ hours):
     1. This design document
