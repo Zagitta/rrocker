@@ -36,6 +36,9 @@ Tasks will inherit the UID/GID of the daemon and internally be mapped as root.
 
 For the gRPC implementation I'll be using the rust crate [tonic](https://github.com/hyperium/tonic) to avoid reinventing the wheel.
 
+Mutable interaction with tasks will be mutually exclusive meaning that the stop action will take a write-only lock on the task such that any concurrent stop task will wait for the first to complete and the subsequently fail as the task has already stopped.
+Read-only interactions such as query and stream can happen concurrently without issue.
+
 ## rrocker-cli:
 The CLI will need to be run once per command, so scheduling multiple tasks requires multiple invocations.
 
@@ -49,6 +52,7 @@ Human friendliness of the API is a distant afterthought, as such full UUIDs will
 Resource limits will be exposed 1-to-1 with the underlying cgroups API leaving it up to the `rrocker-cli` to expose it in a human friendly way.
 # Security
 Security is naturally an important aspect of the implementation however as my experience with crypto is limited I'll attempt to follow best practices and use the default configuration of OpenSSL and rustTLS wherever applicable.
+In an actual production system you'd have a security expert decide the configuration based on a threat model.
 
 ## Authentication
 Authentication will be done with mTLS according to the challenge rules.
@@ -61,7 +65,7 @@ The following certificates will be created:
 - Admin_1 cert used to demo admin's being able to see all tasks
 - An untrusted CA + client cert to demo unauthorized client's can't connect
 
-Private keys will be generated with OpenSSL using the prime256v1 ECDH curve.
+Private keys will be generated with OpenSSL using the prime256v1 ECDH curve as recommended by mozilla: https://wiki.mozilla.org/Security/Server_Side_TLS#Modern_compatibility.
 
 ## Authorization
 The authorization scheme will be super simple solution where an authenticated user either is an admin or regular user.
