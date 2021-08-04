@@ -87,6 +87,12 @@ The CLI will contain the following 4 commands:
     31334
     ^C
     ```
+    If the task completes during streaming the exit code will be printed at the end:
+    ```
+    > rrocker-cli stream $(rrocker-cli start /bin/true)
+    Task state: Completed
+    Exit code: 0
+    ```
 
 ## rrocker-lib:
 No attention will be paid to backwards compatibility of the API, meaning no versioning or abstractions.
