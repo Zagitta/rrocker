@@ -75,6 +75,13 @@ This distinction will be done by looking at the Common Name of the client certif
 The public key of a cert will be used as the client id despite the drawback that a single client would have to share the same cert across multiple servers against best practices. 
 In a production environment you'd introduce another indirection such a user could have multiple certs all manage the same tasks and possibly some way to further segment these tasks into groups.
 
+# Testing
+I'll primarily be writing unit and integrations tests with a focus on testing the security.
+
+As such authentication and authorization will be tested to ensure client's can't see each others tasks and that invalid certificates can't authenticate.
+
+I'll also write unit tests for the work scheduler to ensure tasks are properly isolated with their own PID, user, mount and network namespaces.
+
 # Timeline
 
 - PR #0 (~2½ hours):
@@ -87,7 +94,7 @@ In a production environment you'd introduce another indirection such a user coul
     1. Implement authentication tests for gRPC server
 - PR #2 (~10 hours):
     1. Implement/fix feedback given on PR #1
-    1. Implement work scheduler and some basic tests
+    1. Implement work scheduler and tests
     1. Finish gRPC server implementation using the work scheduler
 - PR #3 (~6 hours)
     1. Implement/fix feedback given on PR #2
