@@ -44,6 +44,50 @@ The CLI will need to be run once per command, so scheduling multiple tasks requi
 
 There'll be zero command line switches and as such it'll be hardcoded to connect to `rrockerd` running on localhost.
 
+The CLI will contain the following 4 commands:
+
+- A start command which schedules a task and returns the uuid of the task, example usage: 
+    ```
+    > rrocker-cli start /bin/bash -c 'while true; do echo $RANDOM; sleep 1; done'
+    0e6b1e8c-ab62-4d5e-8afe-3d8d0c36fb14
+    > rrocker-cli start /bin/a_binary_that_doesnt_exist some arg
+    Binary '/bin/a_binary_that_doesnt_exist' not found in base image.
+    ```
+    This command also has a 2 additional flags to constrain memory and cpu usage:
+    ```
+    > rrocker-cli start --max-cpu 50% --max-mem 1G /bin/sleep 10
+    be625fe4-ee25-4781-a128-faf38029d7ca
+    ```
+- A stop command which kills the task. Either returns success or an error if the task already was killed or didn't exist. Example:
+    ```
+    > rrocker-cli stop 0e6b1e8c-ab62-4d5e-8afe-3d8d0c36fb14
+    Killed task 0e6b1e8c-ab62-4d5e-8afe-3d8d0c36fb14
+    > rrocker-cli stop abcdefgh-1234-5678-0987-abcdefgh
+    Task 'abcdefgh-1234-5678-0987-abcdefgh' doesn't exist
+    ```
+- A query command which prints the status of the task. The status message will contain a state that's one of [running, completed, killed] and in case the process produced an exit code that'll also be part of the status message. Example: 
+    ```
+    > rrocker-cli query 0e6b1e8c-ab62-4d5e-8afe-3d8d0c36fb14
+    Task state: Killed
+    > rrocker-cli start /bin/sleep 10
+    c94b7817-4786-4de5-8ee7-e4012360d0a9
+    > rrocker-cli query c94b7817-4786-4de5-8ee7-e4012360d0a9
+    Task state: Running
+    > sleep 10
+    > rrocker-cli query c94b7817-4786-4de5-8ee7-e4012360d0a9
+    Task state: Completed
+    Exit code: 0
+    ```
+- A stream command which prints future task output until the either the task completes or the cli/task is killed. Example:
+    ```
+    > rrocker-cli stream $(rrocker-cli start /bin/bash -c 'while true; do echo $RANDOM; sleep 1; done')
+    26818
+    19041
+    26583
+    31334
+    ^C
+    ```
+
 ## rrocker-lib:
 No attention will be paid to backwards compatibility of the API, meaning no versioning or abstractions.
 
