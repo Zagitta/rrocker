@@ -1,6 +1,7 @@
 syntax = "proto3";
 package rrocker.api;
 
+import "google/protobuf/empty.proto";
 /// A handle for our task, contains an UUIDv4
 message TaskHandle {
     string uuid = 1;
