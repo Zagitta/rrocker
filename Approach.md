@@ -121,9 +121,9 @@ Private keys will be generated with OpenSSL using the prime256v1 ECDH curve as r
 The authorization scheme will be super simple solution where an authenticated user either is an admin or regular user.
 A regular user will only be able to perform actions on it's own tasks while an admin can interact with **all** tasks.
 
-This distinction will be done by looking at the Common Name of the client certificate, `CN=client` for clients and `CN=admin` for admins.
-The public key of a cert will be used as the client id despite the drawback that a single client would have to share the same cert across multiple servers against best practices. 
-In a production environment you'd introduce another indirection such a user could have multiple certs all manage the same tasks and possibly some way to further segment these tasks into groups.
+This distinction will be done by looking at the Organization (O) of the certificate subject, `O=client` for clients and `O=admin` for admins. In order to simplify things only the first group of a certificate will be used.
+
+Client identities will be encoded in the Common Name (CN) part of the certificate subject like `CN=client1`and `CN=client2`.
 
 # Testing
 I'll primarily be writing unit and integrations tests with a focus on testing the security.
