@@ -48,23 +48,23 @@ openssl x509 -req -days 365 -in $SERVER1_CRS_PATH -CA $SERVER_CA_CRT_PATH -CAkey
 
 
 #generate client CA private key and cert sign request (CSR) 
-openssl req -new -newkey ec:<(openssl ecparam -name prime256v1) -keyout $CLIENT_CA_KEY_PATH -out $CLIENT_CA_CRS_PATH -days 356 -nodes -subj '/CN=Server Cert Authority'
+openssl req -new -newkey ec:<(openssl ecparam -name prime256v1) -keyout $CLIENT_CA_KEY_PATH -out $CLIENT_CA_CRS_PATH -days 1 -nodes -subj '/CN=Server Cert Authority'
 #sign client CA CRS with root CA
-openssl x509 -req -days 365 -in $CLIENT_CA_CRS_PATH -CA $ROOT_CA_CRT_PATH -CAkey $ROOT_CA_KEY_PATH -set_serial 01 -out $CLIENT_CA_CRT_PATH
+openssl x509 -req -days 1 -in $CLIENT_CA_CRS_PATH -CA $ROOT_CA_CRT_PATH -CAkey $ROOT_CA_KEY_PATH -set_serial 01 -out $CLIENT_CA_CRT_PATH
 
 
 
 #generate client1 private key and cert sign request (CSR) 
-openssl req -new -newkey ec:<(openssl ecparam -name prime256v1) -keyout $CLIENT1_KEY_PATH -out $CLIENT1_CRS_PATH -days 356 -nodes -subj '/CN=client1'
+openssl req -new -newkey ec:<(openssl ecparam -name prime256v1) -keyout $CLIENT1_KEY_PATH -out $CLIENT1_CRS_PATH -days 1 -nodes -subj '/CN=client1'
 #sign client1 CRS with server CA
-openssl x509 -req -days 365 -in $CLIENT1_CRS_PATH -CA $CLIENT_CA_CRT_PATH -CAkey $CLIENT_CA_KEY_PATH -set_serial 01 -out $CLIENT1_CRT_PATH
+openssl x509 -req -days 1 -in $CLIENT1_CRS_PATH -CA $CLIENT_CA_CRT_PATH -CAkey $CLIENT_CA_KEY_PATH -set_serial 01 -out $CLIENT1_CRT_PATH
 #generate client2 private key and cert sign request (CSR) 
-openssl req -new -newkey ec:<(openssl ecparam -name prime256v1) -keyout $CLIENT2_KEY_PATH -out $CLIENT2_CRS_PATH -days 356 -nodes -subj '/CN=client2'
+openssl req -new -newkey ec:<(openssl ecparam -name prime256v1) -keyout $CLIENT2_KEY_PATH -out $CLIENT2_CRS_PATH -days 1 -nodes -subj '/CN=client2'
 #sign client2 CRS with server CA
-openssl x509 -req -days 365 -in $CLIENT2_CRS_PATH -CA $CLIENT_CA_CRT_PATH -CAkey $CLIENT_CA_KEY_PATH -set_serial 02 -out $CLIENT2_CRT_PATH
+openssl x509 -req -days 1 -in $CLIENT2_CRS_PATH -CA $CLIENT_CA_CRT_PATH -CAkey $CLIENT_CA_KEY_PATH -set_serial 02 -out $CLIENT2_CRT_PATH
 
 #generate a selfsigned but unauthorized cert that attemps to immitate client1
-openssl req -x509 -newkey ec:<(openssl ecparam -name prime256v1) -keyout $UNAUTH_KEY_PATH -out $UNAUTH_CRT_PATH -days 356 -nodes -subj '/CN=client1'
+openssl req -x509 -newkey ec:<(openssl ecparam -name prime256v1) -keyout $UNAUTH_KEY_PATH -out $UNAUTH_CRT_PATH -days 1 -nodes -subj '/CN=client1'
 
 #cleanup certificate sign requests
 rm -rf certs/*.csr certs/CA/*.csr
