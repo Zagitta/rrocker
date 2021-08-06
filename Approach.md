@@ -43,6 +43,8 @@ Output streaming will be implemented by redirecting the spawned process' stdout 
 These pipes can then be read in an async fashion from a tokio reader task and passed on to a `broadcast` multiple-producer multiple-consumer (MPMC) channel (only a single producer will exists but there's no SPMC channel in tokio).
 Then from the gRPC server side it's easy to lookup the `broadcast` channel for a given task-id and subscribe to it in an async task which produces matching `TaskOutputReply` messages and writes them to the gRPC stream.
 Furthermore once the spawned process exit, the pipes will close which in turn will be detected by the reader task resulting in the channel being closed which last but not least will make the gRPC stream end with a final message containing the task status.
+This cuts one significant corner, namely it's not possible to retrieve past output which most certainly would be a requirement for a production system.
+For a production system you'd implement some kind of ring-buffer that enables fetching the past N bytes of output while subscribing to future output without falling behind.
 
 Implementation-wise the reader task will simply wrap the raw file descriptors using `tokio::fs::File::from_raw_fd()` and with them use `tokio::select!()` to await output being written stdout and stderr simultaneously.
 ## rrocker-cli:
