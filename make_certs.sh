@@ -31,7 +31,7 @@ CLIENT2_CRS_PATH="certs/client2.csr"
 CLIENT2_CRT_PATH="certs/client2_crt.pem"
 
 UNAUTH_KEY_PATH="certs/unsigned_key.pem"
-UNAUTH_CRT_PATH="certs/unsigned_key.crt"
+UNAUTH_CRT_PATH="certs/unsigned_crt.pem"
 
 SERVER_CA_CHAIN_PATH="certs/server_ca_chain.pem"
 CLIENT_CA_CHAIN_PATH="certs/client_ca_chain.pem"
