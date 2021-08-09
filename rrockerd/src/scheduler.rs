@@ -51,6 +51,7 @@ impl SchedulerServer {
     }
 
     /// Returns an iterator over a specific user's tasks.
+    #[allow(dead_code)]
     fn iter_tasks<'a>(
         &'a self,
         auth: &ClientAuth,
@@ -152,9 +153,15 @@ impl Scheduler for SchedulerServer {
         &self,
         request: tonic::Request<StartTaskRequest>,
     ) -> Result<Response<StartTaskReply>, Status> {
-        let _auth = request_to_auth(&request)?;
+        let auth = request_to_auth(&request)?;
+        let data = request.get_ref();
+        let task = self.new_task(auth, &data.cmd, &data.args[..])?;
 
-        todo!()
+        Ok(Response::new(StartTaskReply {
+            handle: Some(TaskHandle {
+                uuid: task.key().to_string(),
+            }),
+        }))
     }
 
     #[tracing::instrument]
