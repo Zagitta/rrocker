@@ -45,6 +45,7 @@ mod test {
     use super::*;
 
     #[test]
+    #[ignore]
     fn is_pid_isolated() {
         use sysinfo::{System, SystemExt};
 
@@ -65,6 +66,7 @@ mod test {
     }
 
     #[test]
+    #[ignore]
     fn is_net_isolated() {
         use sysinfo::{System, SystemExt};
 
@@ -89,6 +91,7 @@ mod test {
     }
 
     #[test]
+    #[ignore]
     fn is_disk_isolated() {
         use sysinfo::{DiskExt, System, SystemExt};
 

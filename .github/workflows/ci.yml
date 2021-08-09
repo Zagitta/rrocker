@@ -35,7 +35,6 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --exclude isolation::test::* #these tests require SYS_CAP_ADMIN
 
   fmt:
     name: Rustfmt
