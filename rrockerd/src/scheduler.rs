@@ -43,11 +43,10 @@ impl SchedulerServer {
             return true;
         }
         if let Some(set) = self.client_tasks.get(&auth.id) {
-            if set.contains(uuid) {
-                return true;
-            }
+            set.contains(uuid)
+        } else {
+            false
         }
-        false
     }
 
     /// Returns an iterator over a specific user's tasks.
@@ -116,17 +115,15 @@ impl SchedulerServer {
         _cmd: &str,
         _args: &[String],
     ) -> Result<Ref<'_, Uuid, Task>, Status> {
-        let mut ent = self
+        let ent = self
             .task_map
             .entry(Uuid::new_v4())
             .or_insert_with(Task::new);
-        {
-            let (key, _task) = ent.pair_mut();
-            self.client_tasks
-                .entry(auth.id.clone())
-                .or_default()
-                .insert(*key);
-        }
+
+        self.client_tasks
+            .entry(auth.id.clone())
+            .or_default()
+            .insert(*ent.key());
 
         //todo hookup worker
 
@@ -239,29 +236,30 @@ mod test {
             group: "client".into(),
         };
 
-        let ent1 = server.new_task(&c1, &"asd", &vec![]).unwrap();
-        let ent2 = server.new_task(&c1, &"foo", &vec![]).unwrap();
-        let ent3 = server.new_task(&c2, &"bar", &vec![]).unwrap();
-        let ent4 = server.new_task(&c2, &"dsa", &vec![]).unwrap();
+        //this has to be done in seperate scopes as items might end up in the same bucket and dead lock
+        let k1 = { *server.new_task(&c1, &"asd", &vec![]).unwrap().key() };
+        let k2 = { *server.new_task(&c1, &"foo", &vec![]).unwrap().key() };
+        let k3 = { *server.new_task(&c2, &"bar", &vec![]).unwrap().key() };
+        let k4 = { *server.new_task(&c2, &"dsa", &vec![]).unwrap().key() };
 
         //admin has access to everything
-        assert_eq!(server.verify_task_access(&a1, &ent1.key()), true);
-        assert_eq!(server.verify_task_access(&a1, &ent2.key()), true);
-        assert_eq!(server.verify_task_access(&a1, &ent3.key()), true);
-        assert_eq!(server.verify_task_access(&a1, &ent4.key()), true);
+        assert_eq!(server.verify_task_access(&a1, &k1), true);
+        assert_eq!(server.verify_task_access(&a1, &k2), true);
+        assert_eq!(server.verify_task_access(&a1, &k3), true);
+        assert_eq!(server.verify_task_access(&a1, &k4), true);
 
         //c1 has access to his own stuff
-        assert_eq!(server.verify_task_access(&c1, &ent1.key()), true);
-        assert_eq!(server.verify_task_access(&c1, &ent2.key()), true);
+        assert_eq!(server.verify_task_access(&c1, &k1), true);
+        assert_eq!(server.verify_task_access(&c1, &k2), true);
         //but not c2's tasks
-        assert_eq!(server.verify_task_access(&c1, &ent3.key()), false);
-        assert_eq!(server.verify_task_access(&c1, &ent4.key()), false);
+        assert_eq!(server.verify_task_access(&c1, &k3), false);
+        assert_eq!(server.verify_task_access(&c1, &k4), false);
 
         //and vice versa for c2
-        assert_eq!(server.verify_task_access(&c2, &ent1.key()), false);
-        assert_eq!(server.verify_task_access(&c2, &ent2.key()), false);
-        assert_eq!(server.verify_task_access(&c2, &ent3.key()), true);
-        assert_eq!(server.verify_task_access(&c2, &ent4.key()), true);
+        assert_eq!(server.verify_task_access(&c2, &k1), false);
+        assert_eq!(server.verify_task_access(&c2, &k2), false);
+        assert_eq!(server.verify_task_access(&c2, &k3), true);
+        assert_eq!(server.verify_task_access(&c2, &k4), true);
     }
 
     #[test]
