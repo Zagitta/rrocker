@@ -40,6 +40,7 @@ impl<'a, T: Serialize + DeserializeOwned + Send> IsolatedProcess<'a, T> {
 }
 
 #[cfg(test)]
+/// All these tests must be run with root (SYS_CAP_ADMIN)
 mod test {
     use super::*;
 
