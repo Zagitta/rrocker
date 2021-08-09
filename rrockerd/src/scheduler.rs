@@ -152,8 +152,7 @@ impl Scheduler for SchedulerServer {
         &self,
         request: tonic::Request<StartTaskRequest>,
     ) -> Result<Response<StartTaskReply>, Status> {
-        let auth = request_to_auth(&request)?;
-        let uuid = string_to_uuid(&request.get_ref().uuid)?;
+        let _auth = request_to_auth(&request)?;
 
         todo!()
     }
@@ -163,7 +162,7 @@ impl Scheduler for SchedulerServer {
         let auth = request_to_auth(&request)?;
         let uuid = string_to_uuid(&request.get_ref().uuid)?;
 
-        let task = self.lookup_task_mut(auth, &uuid)?;
+        let _task = self.lookup_task_mut(auth, &uuid)?;
 
         todo!()
     }
@@ -176,7 +175,7 @@ impl Scheduler for SchedulerServer {
         let auth = request_to_auth(&request)?;
         let uuid = string_to_uuid(&request.get_ref().uuid)?;
 
-        let task = self.lookup_task(auth, &uuid)?;
+        let _task = self.lookup_task(auth, &uuid)?;
 
         Ok(Response::new(QueryTaskReply {
             state: Some(TaskState {
