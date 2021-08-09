@@ -84,6 +84,7 @@ impl<T: DeserializeOwned> ResultReader<T> {
 #[cfg(test)]
 mod test {
     use nix::sys::wait::WaitStatus;
+    use serde::{Deserialize, Serialize};
 
     use super::*;
 
