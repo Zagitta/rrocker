@@ -2,7 +2,10 @@ use tonic::{Request, Status};
 use x509_parser::prelude::X509Certificate;
 
 #[derive(Debug)]
+/// The request's authorization
 pub struct ClientAuth {
+    //in a production system you'd convert both the id and group to integer based ids asap
+    //for perf reasons but in simplicity's name I'm cutting that corner
     pub id: String,
     pub group: String,
 }
