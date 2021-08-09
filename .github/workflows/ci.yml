@@ -29,9 +29,7 @@ jobs:
           toolchain: stable
           override: true
       - name: Generate test certs
-        run: |
-          pwd
-          bash ./make_test_certs.sh
+        run: ./make_test_certs.sh
         shell: bash
       - uses: actions-rs/cargo@v1
         with:
