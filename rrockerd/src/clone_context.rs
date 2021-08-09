@@ -1,18 +1,12 @@
 use crate::pipe::Pipe;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use nix::{
     sched::{self, CloneCb, CloneFlags},
     sys::signal::Signal::SIGCHLD,
     unistd::Pid,
 };
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::{
-    fs::File,
-    io::BufReader,
-    marker::PhantomData,
-    ops::{Deref, DerefMut},
-    process,
-};
+use serde::{de::DeserializeOwned, Serialize};
+use std::{fs::File, io::BufReader, marker::PhantomData, ops::DerefMut};
 
 const STACK_SIZE: usize = 1024 * 1024; //1MiB
 ///Used to hold our

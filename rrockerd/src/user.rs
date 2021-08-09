@@ -1,11 +1,7 @@
 use anyhow::{Context, Result};
 #[cfg(target_family = "unix")]
 use nix::unistd::{Gid, Uid};
-use std::{
-    fmt::{format, Display},
-    fs::{File, OpenOptions},
-    io::Write,
-};
+use std::{fs::OpenOptions, io::Write};
 
 #[cfg(target_family = "unix")]
 pub(crate) fn write_uid_map(inside: Uid, outside: Uid, len: u32) -> Result<()> {

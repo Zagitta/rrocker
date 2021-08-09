@@ -29,7 +29,7 @@ pub(crate) fn mount_proc() -> Result<()> {
 }
 
 pub(crate) fn pivot_root(root: &Path) -> Result<()> {
-    const OLD_ROOT_NAME: &'static str = ".old_root";
+    const OLD_ROOT_NAME: &str = ".old_root";
     let old_root = root.join(OLD_ROOT_NAME);
     if !old_root.exists() {
         std::fs::create_dir(&old_root).context(format!("Failed to create '{:?}' dir", old_root))?;

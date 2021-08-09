@@ -21,7 +21,7 @@ impl<'a, T: Serialize + DeserializeOwned + Send> IsolatedProcess<'a, T> {
         Ok(Self {
             ctx: CloneContext::new(move || -> Result<T> {
                 fs::remount_private().context("Failed to remount privately")?;
-                fs::pivot_root(&Path::new("/var/rrocker-root/")).context("Failed to pivot root")?;
+                fs::pivot_root(Path::new("/var/rrocker-root/")).context("Failed to pivot root")?;
                 fs::mount_proc().context("Failed to mount proc")?;
                 fs::mount_sysfs().context("Failed to mount sysfs")?;
                 //fs::mount_cgroups().context("Failed to mount cgroup")?;

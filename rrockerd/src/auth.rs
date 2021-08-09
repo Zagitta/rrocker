@@ -15,13 +15,13 @@ pub struct ClientAuth {
 pub(crate) fn authorization_interceptor(req: Request<()>) -> Result<Request<()>, Status> {
     let peer_certs = req
         .peer_certs()
-        .ok_or(Status::unauthenticated("Missing certs"))?;
+        .ok_or_else(|| Status::unauthenticated("Missing certs"))?;
 
     let (_, cert) = peer_certs
         .iter()
         .map(|c| x509_parser::parse_x509_certificate(c.get_ref()))
         .next()
-        .ok_or(Status::unauthenticated("Empty cert list"))?
+        .ok_or_else(|| Status::unauthenticated("Empty cert list"))?
         .map_err(|_| Status::unauthenticated("One or more certs are invalid"))?;
 
     validate_cert(cert, req)
@@ -34,7 +34,7 @@ fn validate_cert(cert: X509Certificate, mut req: Request<()>) -> Result<Request<
         .subject()
         .iter_common_name()
         .next()
-        .ok_or(Status::unauthenticated("Cert doesn't contain common name"))?;
+        .ok_or_else(|| Status::unauthenticated("Cert doesn't contain common name"))?;
     let common_name = common_name
         .as_str()
         .map_err(|_| Status::unauthenticated("Invalid common name"))?;
@@ -42,7 +42,7 @@ fn validate_cert(cert: X509Certificate, mut req: Request<()>) -> Result<Request<
         .subject()
         .iter_organization()
         .next()
-        .ok_or(Status::unauthenticated("Cert doesn't contain organization"))?;
+        .ok_or_else(|| Status::unauthenticated("Cert doesn't contain organization"))?;
     let org_name = org_name
         .as_str()
         .map_err(|_| Status::unauthenticated("Invalid organization"))?;

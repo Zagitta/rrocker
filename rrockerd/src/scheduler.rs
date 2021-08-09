@@ -11,7 +11,7 @@ use rrocker_lib::api::{
 use std::{collections::HashSet, pin::Pin};
 use tokio::sync::broadcast::{channel, Receiver, Sender};
 use tokio_stream::wrappers::BroadcastStream;
-use tonic::{IntoRequest, Response, Status};
+use tonic::{Response, Status};
 use uuid::Uuid;
 
 #[derive(Debug)]
@@ -83,7 +83,7 @@ impl SchedulerServer {
         let task = self
             .task_map
             .get(uuid)
-            .ok_or(Status::invalid_argument("Invalid task handle"))?;
+            .ok_or_else(|| Status::invalid_argument("Invalid task handle"))?;
 
         if self.verify_task_access(auth, uuid) {
             Ok(task)
@@ -100,7 +100,7 @@ impl SchedulerServer {
         let task = self
             .task_map
             .get_mut(uuid)
-            .ok_or(Status::invalid_argument("Invalid task handle"))?;
+            .ok_or_else(|| Status::invalid_argument("Invalid task handle"))?;
 
         if self.verify_task_access(auth, uuid) {
             Ok(task)
@@ -112,15 +112,15 @@ impl SchedulerServer {
     fn new_task(
         &self,
         auth: &ClientAuth,
-        cmd: &str,
-        args: &Vec<String>,
+        _cmd: &str,
+        _args: &[String],
     ) -> Result<Ref<'_, Uuid, Task>, Status> {
         let mut ent = self
             .task_map
             .entry(Uuid::new_v4())
             .or_insert_with(Task::new);
         {
-            let (key, task) = ent.pair_mut();
+            let (key, _task) = ent.pair_mut();
             self.client_tasks
                 .entry(auth.id.clone())
                 .or_default()
@@ -136,7 +136,7 @@ impl SchedulerServer {
 fn request_to_auth<T>(req: &tonic::Request<T>) -> Result<&ClientAuth, Status> {
     req.extensions()
         .get::<ClientAuth>()
-        .ok_or(Status::internal("Missing ClientAuth extension"))
+        .ok_or_else(|| Status::internal("Missing ClientAuth extension"))
 }
 
 fn string_to_uuid(uuid_string: &str) -> Result<Uuid, Status> {
@@ -152,6 +152,9 @@ impl Scheduler for SchedulerServer {
         &self,
         request: tonic::Request<StartTaskRequest>,
     ) -> Result<Response<StartTaskReply>, Status> {
+        let auth = request_to_auth(&request)?;
+        let uuid = string_to_uuid(&request.get_ref().uuid)?;
+
         todo!()
     }
 
