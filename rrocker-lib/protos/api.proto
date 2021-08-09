@@ -35,12 +35,6 @@ enum OutputStream {
     Stderr = 2;
 }
 
-/// Task output with a line of output plus which pipe it came from
-message TaskOutput {
-    string line = 1;
-    OutputStream stream = 2;
-}
-
 /// Enum describing the status of a task
 enum TaskStatus {
     TASK_COMPLETED = 0;
@@ -59,13 +53,10 @@ message QueryTaskReply {
     TaskState state = 1;
 }
 
-/// The message streamed when requesting a task's output.
-/// Each message will either be some output or a state indicating termination.
+/// Task output reply with a line of output plus which pipe it came from
 message TaskOutputReply {
-    oneof result {
-        TaskOutput output = 1;
-        TaskState state = 2;
-    }
+    string line = 1;
+    OutputStream stream = 2;
 }
 
 /// Scheduler service used to run isolated and constrained tasks on a daemon
