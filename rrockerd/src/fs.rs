@@ -57,6 +57,7 @@ pub(crate) fn pivot_root(root: &Path) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 pub(crate) fn unmount_all() -> Result<()> {
     mount::umount2("/", MntFlags::MNT_DETACH).context("Failed to unmount /")
 }
@@ -79,6 +80,8 @@ pub(crate) fn mount_sysfs() -> Result<()> {
 
     Ok(())
 }
+
+#[allow(dead_code)]
 pub(crate) fn mount_cgroups() -> Result<()> {
     mount::mount(
         Option::<&str>::None,
