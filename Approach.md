@@ -39,12 +39,23 @@ For the gRPC implementation I'll be using the rust crate [tonic](https://github.
 Mutable interaction with tasks will be mutually exclusive meaning that the stop action will take a write-only lock on the task such that any concurrent stop task will wait for the first to complete and the subsequently fail as the task has already stopped.
 Read-only interactions such as query and stream can happen concurrently without issue.
 
+Tasks will be stored stored in a concurrent `HashMap` that internally uses `RwLock`s and be addressed by UUIDs, furthermore there'll be a separate concurrent `HashMap` that maps a client ID to a HashSet of tasks belong to the client.
+
 Output streaming will be implemented by redirecting the spawned process' stdout and stderr to pipes created with `pipe(2)`.
-These pipes can then be read in an async fashion from a tokio reader task and passed on to a `broadcast` multiple-producer multiple-consumer (MPMC) channel (only a single producer will exists but there's no SPMC channel in tokio).
-Then from the gRPC server side it's easy to lookup the `broadcast` channel for a given task-id and subscribe to it in an async task which produces matching `TaskOutputReply` messages and writes them to the gRPC stream.
-Furthermore once the spawned process exit, the pipes will close which in turn will be detected by the reader task resulting in the channel being closed which last but not least will make the gRPC stream end with a final message containing the task status.
-This cuts one significant corner, namely it's not possible to retrieve past output which most certainly would be a requirement for a production system.
-For a production system you'd implement some kind of ring-buffer that enables fetching the past N bytes of output while subscribing to future output without falling behind.
+These pipes will then be read by one async reader task per spawned process line by line and fed into a custom log data structure.
+
+This log data structure will consists of 4 elements: `LogWriter`, `LogReader`, `LogReaderFactory` and `Shared` where `Shared` internally consists of a `RwLock` that wraps a vector of log lines and a bool to mark the log stream as closed. 
+Of course having a single `RwLock` can lead to high contention if there are a lot of readers and the process produces a lot of output but improving that is left for a future implementation.
+
+The writer, reader and factory each contain an `Arc<Shared>` which they'll use to read/write log lines. 
+
+The primary magic will happen in a custom `Future` implementation which is returned by the `LogReader::read` function.
+This future contains a `Arc<Shared>` with which it tries to read the desired log line index, if this item isn't found it adds the current context's `Waker` to the vector of tokio `Waker`'s in the `Arc<Shared>`.
+The future will return an `Option<T>` which contains the log when the future is awakened or `None` if the writer has been dropped and as such set closed to true.
+This `Future` implementation can then trivially be turned into a `Stream`, which can be returned directly from the gRPC `TaskOutputStream` function, by using the `async-stream` crate.
+
+All of this is hooked up with the gRPC service by storing the `LogReaderFactory` in the Task struct, that is looked up by uuid from the concurrent `HashMap`. With this `LogReaderFactory` it's simple to create a new `LogReader` by cloning the `Arc<Shared>` and setting the read index to 0.
+
 
 Implementation-wise the reader task will simply wrap the raw file descriptors using `tokio::fs::File::from_raw_fd()` and with them use `tokio::select!()` to await output being written stdout and stderr simultaneously.
 ## rrocker-cli:
