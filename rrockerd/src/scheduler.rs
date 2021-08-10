@@ -1,4 +1,5 @@
 use crate::auth::ClientAuth;
+use crate::log::{log_channel, LogReader, LogReaderFactory};
 use dashmap::{
     mapref::one::{Ref, RefMut},
     DashMap,
@@ -9,23 +10,20 @@ use rrocker_lib::api::{
     TaskHandle, TaskOutputReply, TaskState, TaskStatus,
 };
 use std::{collections::HashSet, pin::Pin};
-use tokio::sync::broadcast::{channel, Receiver, Sender};
-use tokio_stream::wrappers::BroadcastStream;
 use tonic::{Response, Status};
 use uuid::Uuid;
-
 #[derive(Debug)]
 struct Task {
-    tx: Sender<(String, OutputStream)>,
+    log_factory: LogReaderFactory<(String, OutputStream)>,
 } //todo
 
 impl Task {
     pub fn new() -> Self {
-        let (tx, _rx) = channel(32);
-        Self { tx }
+        let (log_factory, _log_writer) = log_channel();
+        Self { log_factory }
     }
-    pub fn subscribe(&self) -> Receiver<(String, OutputStream)> {
-        self.tx.subscribe()
+    pub fn log_subscribe(&self) -> LogReader<(String, OutputStream)> {
+        self.log_factory.create_reader()
     }
 }
 
@@ -201,18 +199,15 @@ impl Scheduler for SchedulerServer {
         let uuid = string_to_uuid(&request.get_ref().uuid)?;
         let task = self.lookup_task(auth, &uuid)?;
 
-        //yikes
-        let stream = BroadcastStream::new(task.subscribe())
-            .filter_map(|item| async { item.ok() })
-            .map(|(line, stream)| {
-                Ok(TaskOutputReply {
-                    line,
-                    stream: stream.into(),
-                })
-            });
-        let stream = Box::pin(stream) as Self::TaskOutputStreamStream;
+        let log_stream = task.log_subscribe().into_stream().map(|arc| {
+            let (line, output) = arc.as_ref();
+            Ok(TaskOutputReply {
+                line: line.clone(),
+                stream: *output as i32,
+            })
+        });
 
-        Ok(Response::new(stream))
+        Ok(Response::new(Box::pin(log_stream)))
     }
 }
 

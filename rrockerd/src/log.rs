@@ -27,6 +27,7 @@ struct Shared<T> {
     inner: RwLock<SharedInternal<T>>,
 }
 
+#[derive(Debug)]
 enum ReaderFut<T> {
     Ok(Option<Arc<T>>),
     Future { shared: Arc<Shared<T>>, idx: usize },
@@ -89,15 +90,18 @@ impl<T> Shared<T> {
     }
 }
 
+#[derive(Debug)]
 pub struct LogWriter<T> {
     shared: Arc<Shared<T>>,
 }
 
+#[derive(Debug)]
 pub struct LogReader<T> {
     shared: Arc<Shared<T>>,
     idx: usize,
 }
 
+#[derive(Debug)]
 pub struct LogReaderFactory<T> {
     shared: Arc<Shared<T>>,
 }
