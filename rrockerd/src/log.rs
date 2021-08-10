@@ -38,7 +38,7 @@ impl<T> Future for ReaderFut<T> {
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = unsafe { self.get_unchecked_mut() };
         match this {
-            ReaderFut::Ok(item) => return Poll::Ready(item.take()),
+            ReaderFut::Ok(item) => Poll::Ready(item.take()),
             ReaderFut::Future { shared, idx } => {
                 let guard = shared.inner.read().unwrap();
                 match (guard.items.get(*idx), guard.closed) {
