@@ -162,11 +162,13 @@ mod test {
     async fn test_log() {
         let (factory, writer) = log_channel();
 
-        writer.write("data1".to_owned());
-        writer.write("data2".to_owned());
-        writer.write("data3".to_owned());
-
-        drop(writer);
+        let data = (1..=10).map(|i| format!("data{}", i)).collect::<Vec<_>>();
+        let inner_data = data.clone();
+        tokio::spawn(async move {
+            for s in inner_data {
+                writer.write(s);
+            }
+        });
 
         let s = factory.create_reader().into_stream();
         let res = s
@@ -175,10 +177,7 @@ mod test {
             .into_iter()
             .map(|s| s.as_ref().clone())
             .collect::<Vec<_>>();
-        assert_eq!(
-            res,
-            vec!["data1".to_owned(), "data2".to_owned(), "data3".to_owned()]
-        );
+        assert_eq!(res, data);
 
         let s2 = factory.create_reader().into_stream();
         let res = s2
@@ -187,9 +186,6 @@ mod test {
             .into_iter()
             .map(|s| s.as_ref().clone())
             .collect::<Vec<_>>();
-        assert_eq!(
-            res,
-            vec!["data1".to_owned(), "data2".to_owned(), "data3".to_owned()]
-        );
+        assert_eq!(res, data);
     }
 }
