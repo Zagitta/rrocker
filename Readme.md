@@ -1,7 +1,6 @@
 # Rusty Remote Docker
-A rust implementation of [Teleport's system worker coding challenge](https://github.com/gravitational/careers).
-
-Do us both a favour and **never** use this in production 😅
+A rust implementation of a minimal docker with a gRPC interface. 
+Built as part of a job interview/challenge that didn't succeed so your milage may vary 😉
 
 ## Overview
 This implementation is split into 3 crates:
